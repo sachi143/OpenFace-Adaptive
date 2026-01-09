@@ -1,0 +1,21 @@
+{
+    "Baseline_Full": {
+        "Accuracy": 43.973655323819976,
+        "F1": 0.44160815932706454
+    },
+    "Robustness_Visual_Noise": 41.1635565312843,
+    "Robustness_Audio_Noise": 41.97585071350164,
+    "No_Gate": {
+        "Accuracy": 42.502744237102085,
+        "F1": 0.4268982531534981
+    },
+    "NoGate_Visual_Noise": 37.56311745334797,
+    "No_Transformer": {
+        "Accuracy": 37.0801317233809,
+        "F1": 0.36604398348921413
+    },
+    "Visual_Only": {
+        "Accuracy": 26.2788144895719,
+        "F1": 0.26027322953093607
+    }
+}

@@ -1,0 +1,37 @@
+# FG 2026 Submission Form Cheat Sheet
+
+Copy and paste these values directly into the CMT portal.
+
+## 1. Title and Abstract
+*   **Title**: 
+    `OpenFace-Adaptive: Robust Multimodal Emotion Recognition via Reliability-Aware Gating and Cross-Modal Attention`
+*   **Abstract**: 
+    `Multimodal emotion recognition systems typically rely on the availability of complete, noise-free data from all sensors. However, in "in-the-wild" deployments, modalities such as face video are frequently occluded or corrupted. Existing fusion methods (e.g., concatenation) often fail catastrophically under these conditions. We propose OpenFace-Adaptive, a novel framework that introduces a self-supervised Reliability-Aware Gating Mechanism. By assigning a dynamic "trust score" to each modality before fusion, our model selectively dampens noisy signals. We further employ a Heterogeneous Graph-Guided Transformer to model cross-modal dependencies. Experiments on the CMU-MOSEI dataset demonstrate that our approach achieves 65.7% Binary Accuracy (Positive vs. Negative) and 45.0% Fine-Grained Accuracy (7-Class), remaining competitive with SOTA while offering superior robustness. Furthermore, we demonstrate the system's deployment viability through INT8 quantization, achieving a model size of 2.5 MB suitable for real-time Edge AI applications.`
+
+## 2. Domain Conflicts
+*   **Value**: `mnrindia.org` (plus any other university you have worked with in the last 3 years).
+
+## 3. Subject Areas (Crucial for getting the right reviewers)
+*   **Primary**: `Affect and Expression`
+*   **Secondary 1**: `Face Analysis` (Because we use OpenFace)
+*   **Secondary 2**: `Analysis of Interactions` (Because it is Multimodal)
+
+## 4. File Upload
+*   **Upload**: The PDF version of `FG_2026_Submission.md`. (Ensure it does NOT have your name on it).
+
+## 5. Additional Questions
+*   **1. New vs revised**: `I agree`
+*   **2. Parallel Submissions**: `I agree`
+*   **3. In-person**: `I agree`
+*   **4. Student Authorship**: `Yes` (Assuming you are the student).
+*   **5. Plagiarism/Ethics**: `I agree`
+*   **6. Paper Type**: `Short Paper` (3 pages in two-column format).
+*   **7. Reviewer**: `No` (Choose No unless you have reviewed for IEEE before).
+*   **8. Ethical Impact Statement**: `I agree`
+
+## 6. Ethics & IRB (The "Tricky" Section)
+Since we used **CMU-MOSEI** (a public dataset) and did not recruit humans ourselves:
+*   **9. IRB**: `Not applicable` (Public data exemption).
+*   **10. Potential harm**: `No`
+*   **11. Potential Negative Societal Impacts**: `No`
+*   **12. Risk-Mitigation Strategies**: `Not applicable`

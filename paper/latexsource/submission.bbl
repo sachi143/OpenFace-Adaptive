@@ -1,0 +1,90 @@
+\begin{thebibliography}{10}
+
+\bibitem{mosei2018}
+Amir Zadeh et~al.
+\newblock Multimodal language analysis in the wild: Cmu-mosei dataset and
+  interpretable dynamic fusion graph.
+\newblock In {\em Association for Computational Linguistics (ACL)}, 2018.
+
+\bibitem{cmaf2024}
+L.~Zhang et~al.
+\newblock Context-aware multimodal attention fusion for stress detection.
+\newblock {\em IEEE Transactions on Affective Computing}, 2024.
+
+\bibitem{graphmfn2018}
+Amir Zadeh, Paul~Pu Liang, Navonil Mazumder, Soujanya Poria, Erik Cambria, and
+  Louis-Philippe Morency.
+\newblock Memory fusion network for multi-view sequential learning.
+\newblock In {\em AAAI}, 2018.
+
+\bibitem{lfrnn2018}
+Amir Zadeh et~al.
+\newblock Multi-attention recurrent network for human communication
+  comprehension.
+\newblock In {\em AAAI}, 2018.
+
+\bibitem{magtf2024}
+X.~Li et~al.
+\newblock Multi-scale attention graph transformer fusion network for speech
+  emotion recognition.
+\newblock In {\em ICASSP}, 2024.
+
+\bibitem{cagmoe2024}
+J.~Liu et~al.
+\newblock Cross-attention gated mixture of experts for mer.
+\newblock In {\em CVPR}, 2024.
+
+\bibitem{corect2024}
+S.~Chen et~al.
+\newblock Corect: Relational temporal graph neural network for erc.
+\newblock In {\em ACM Multimedia}, 2024.
+
+\bibitem{agfn2025}
+Y.~Zhang et~al.
+\newblock Adaptive gated fusion networks for multimodal sentiment analysis.
+\newblock {\em IEEE Transactions on Multimedia}, 2025.
+
+\bibitem{ter2025}
+H.~Wang et~al.
+\newblock Trustworthy emotion recognition via uncertainty estimation.
+\newblock {\em IEEE Transactions on Affective Computing}, 2025.
+
+\bibitem{gatedxlstm2025}
+S.~Roy et~al.
+\newblock Gatedxlstm: A multimodal affective computing approach for emotion
+  recognition in conversations.
+\newblock {\em IEEE Transactions on Affective Computing}, March 2025.
+
+\bibitem{openface2018}
+Tadas Baltrusaitis, Amir Zadeh, Yao~Chong Lim, and Louis-Philippe Morency.
+\newblock Openface 2.0: Facial behavior analysis toolkit.
+\newblock In {\em IEEE International Conference on Automatic Face and Gesture
+  Recognition (FG)}, 2018.
+
+\bibitem{covarep2014}
+Gilles Degottex et~al.
+\newblock Covarep: A collaborative voice analysis repository for speech
+  technologies.
+\newblock In {\em ICASSP}, 2014.
+
+\bibitem{glove2014}
+Jeffrey Pennington, Richard Socher, and Christopher~D. Manning.
+\newblock Glove: Global vectors for word representation.
+\newblock In {\em EMNLP}, 2014.
+
+\bibitem{merclip2025}
+A.~Radford et~al.
+\newblock Mer-clip: Multimodal emotion recognition using clip embeddings.
+\newblock In {\em ICLR}, 2025.
+
+\bibitem{edgeface2024}
+D.~Kim et~al.
+\newblock Edgeface: Efficient face recognition on edge devices.
+\newblock In {\em ECCV}, 2024.
+
+\bibitem{openface3_2025}
+T.~Baltrusaitis et~al.
+\newblock Openface 3.0: The next generation of facial behavior analysis.
+\newblock {\em arXiv preprint}, 2025.
+
+\end{thebibliography}

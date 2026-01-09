@@ -1,0 +1,22 @@
+name: openface_adaptive
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cudatoolkit=11.8
+  - transformers
+  - opencv
+  - librosa
+  - pandas
+  - scikit-learn
+  - pip
+  - pip:
+    - opencv-python
+    - speechrecognition
+    - pyaudio
+    - torch_geometric
+    - h5py

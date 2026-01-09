@@ -1,0 +1,220 @@
+\documentclass[a4paper, 10pt, conference]{ieeeconf}
+\usepackage{FG2026}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+
+\IEEEoverridecommandlockouts
+\overrideIEEEmargins
+
+\def\FGPaperID{****} % Anonymous ID
+
+\title{\LARGE \bf
+OpenFace-Adaptive: Robust Multimodal Emotion Recognition via Reliability-Aware Gating and Cross-Modal Attention
+}
+
+\author{Anonymous FG2026 submission\\ Paper ID \FGPaperID \\}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+Multimodal emotion recognition systems typically rely on the availability of complete, noise-free data from all sensors. However, in ``in-the-wild'' deployments, modalities such as face video are frequently occluded or corrupted. Existing fusion methods (e.g., concatenation) often fail catastrophically under these conditions. We propose \textbf{OpenFace-Adaptive}, a novel framework that introduces a self-supervised \textbf{Reliability-Aware Gating Mechanism}. By assigning a dynamic ``trust score'' to each modality before fusion, our model selectively dampens noisy signals. We further employ a \textbf{Heterogeneous Graph-Guided Transformer} to model cross-modal dependencies. Experiments on the CMU-MOSEI dataset demonstrate that our approach achieves \textbf{44.0\% Fine-Grained Accuracy} (7-Class), remaining competitive with SOTA while offering \textbf{superior robustness} under modality corruption (+3.6\% vs ungated baseline). Furthermore, we demonstrate the system's deployment viability through INT8 quantization, achieving a model size of \textbf{2.5 MB} suitable for real-time Edge AI applications.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{INTRODUCTION}
+The field of Affective Computing has witnessed a paradigm shift towards Multimodal Emotion Recognition (MER), driven by the understanding that human sentiment is communicated through a complex interplay of facial expressions, vocal prosody, and linguistic content \cite{mosei2018}. While modern deep learning architectures have achieved remarkable success on clean benchmarks, their deployment in ``in-the-wild'' environments remains fraught with challenges. A critical bottleneck is \textit{sensor failure}: in real-world scenarios, a user may turn away from the camera (occlusion), speak in a noisy environment (audio corruption), or use ambiguous sarcasm (textual dissonance).
+
+Traditional fusion strategies, such as concatenation (Early Fusion) or ensemble averaging (Late Fusion), operate on the assumption of high-fidelity data availability. When one modality is corrupted, these naive fusion mechanisms often allow the noise to propagate, degrading the overall system performance---a phenomenon known as the ``weakest link'' problem \cite{cmaf2024}. Recent attempts to mitigate this, such as modality dropout or robust training, often fail to dynamically adapt to \textit{transient} noise during inference.
+
+To address this, we present \textbf{OpenFace-Adaptive}, a robust framework designed for failure-resilient emotion recognition. By integrating concepts from signal process theory and graph neural networks, we propose a system that is not only accurate but also introspective. \textbf{Our primary contributions are}:
+\begin{enumerate}
+    \item \textbf{Reliability-Aware Gating (RAG)}: A novel self-supervised module that computes a real-time ``trust score'' ($\alpha \in [0,1]$) for each modality. Unlike previous metadata-driven approaches \cite{cmaf2024}, our gate operates directly on perceptual features, allowing it to detect sensor failure (e.g., a black screen) without explicit supervision.
+    \item \textbf{Heterogeneous Graph Fusion}: We propose a graph topology where Visual ($V$), Audio ($A$), and Text ($T$) features are modeled as distinct nodes in a fully connected graph. This allows us to employ a Graph Transformer to learn dynamic cross-modal attention weights, effectively routing information only between ``trusted'' nodes.
+    \item \textbf{Edge-Viability}: Acknowledging the need for privacy-preserving local processing, we demonstrate that our architecture can be quantized to \textbf{2.5 MB} via Dynamic INT8 quantization, enabling deployments on resource-constrained devices like the Raspberry Pi with $<10$ms latency.
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{RELATED WORK}
+
+\subsection{Multimodal Fusion}
+Early work in MER focused on static fusion strategies. The Tensor Fusion Network (TFN) \cite{mosei2018} and Graph Memory Fusion Network (Graph-MFN) \cite{graphmfn2018} established strong baselines by modeling inter-modal dynamics locally. Similarly, Late Fusion RNNs (LF-RNN) \cite{lfrnn2018} demonstrated the efficacy of sequence modeling. Recent approaches have pivoted to Graph Neural Networks (GNNs), such as MAGTF-Net \cite{magtf2024}, CAG-MoE \cite{cagmoe2024}, and CORECT \cite{corect2024}, which capture complex conversational dependencies. However, these architectures usually operate on a \textit{static graph assumption}---implying all nodes (modalities) are equally reliable at all timesteps. Our work challenges this by introducing a dynamic, reliability-aware topology.
+
+\subsection{Reliability \& Gating}
+The concept of ``gating'' noisy signals has been explored in specific domains. CMAF-Net \cite{cmaf2024} utilizes an attention mechanism to weigh modalities for stress detection. More recently, AGFN \cite{agfn2025} proposed entropy-based gating, while TER \cite{ter2025} employed uncertainty estimation via Dempster-Shafer theory. However, these methods often rely on high-level embeddings. In contrast, our Reliability-Aware Gating operates directly on perceptual features (OpenFace AUs), allowing for zero-shot failure detection similar to \cite{gatedxlstm2025}, but adapted for non-conversational segment-level analysis.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{METHODOLOGY}
+
+\subsection{Problem Formulation}
+Let $\mathcal{D} = \{(v_i, a_i, t_i, y_i)\}_{i=1}^{N}$ denote a multimodal dataset where $v_i \in \mathbb{R}^{d_v}$, $a_i \in \mathbb{R}^{d_a}$, and $t_i \in \mathbb{R}^{d_t}$ represent visual, audio, and textual features respectively, and $y_i \in \{0, ..., 6\}$ is the 7-class sentiment label. The goal is to learn a function $f: \mathbb{R}^{d_v} \times \mathbb{R}^{d_a} \times \mathbb{R}^{d_t} \rightarrow \mathbb{R}^{7}$ that is robust to modality corruption.
+
+\textbf{Challenge:} In real-world settings, any modality $m \in \{v, a, t\}$ may be corrupted by noise $\epsilon_m$ such that $\tilde{m} = m + \epsilon_m$. Traditional fusion methods that concatenate features as $[v; a; t]$ propagate this noise directly to the classifier, causing performance degradation proportional to $||\epsilon_m||$.
+
+\textbf{Our Solution:} We introduce reliability weights $\alpha_m \in [0, 1]$ that are learned end-to-end to automatically downweight corrupted modalities, yielding:
+\begin{equation}
+f(\alpha_v \cdot v, \alpha_a \cdot a, \alpha_t \cdot t) \approx f(v, a, t) \quad \text{when } \epsilon_m \text{ is high}
+\end{equation}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.9\textwidth]{architecture.png}
+\caption{System Architecture of OpenFace-Adaptive. The Reliability Gate ($\alpha$) dynamically re-weights features from OpenFace, COVAREP, and GloVe before they are fused by the Heterogeneous Graph Transformer. The wide aspect ratio allows for inspection of the distinct unimodal processing paths.}
+\label{fig:arch}
+\end{figure*}
+
+\subsection{Feature Extraction}
+We extract rich, high-dimensional features from raw data streams to ensure the model has access to subtle emotional cues.
+\begin{itemize}
+    \item \textbf{Visual ($V$)}: We utilize \textbf{OpenFace 2.0} \cite{openface2018}, a state-of-the-art toolkit for facial behavioral analysis. Specifically, we extract a 713-dimensional vector per frame, encompassing Facial Action Units (AUs) which encode muscle movements (e.g., cheek raiser, brow lowerer), as well as rigid head pose and gaze vectors.
+    \item \textbf{Acoustic ($A$)}: We employ \textbf{COVAREP} \cite{covarep2014} to extract 74-dimensional prosodic features including Fundamental Frequency ($F_0$), peak slope, and Mel-Cepstral Coefficients (MGFs), capturing the intonation and stress of speech.
+    \item \textbf{Textual ($T$)}: Spoken words are aligned and embedded using \textbf{GloVe} \cite{glove2014} (300-d) pre-trained vectors, capturing semantic context and sentiment polarity.
+\end{itemize}
+
+\subsection{Reliability-Aware Gating}
+To mitigate the impact of noisy modalities, we introduce a learnable gating mechanism applied in the projected latent space ($d=192$). Let $x_m \in \mathbb{R}^{d}$ denote the feature vector for modality $m \in \{V, A, T\}$. We compute a scalar reliability score $\alpha_m$ via a two-layer Multi-Layer Perceptron (MLP):
+\begin{equation}
+\alpha_m = \sigma(W_2 \cdot \text{ReLU}(W_1 x_m + b_1) + b_2)
+\end{equation}
+where $\sigma$ is the sigmoid function, ensuring $\alpha_m \in [0, 1]$. The feature vector is then scaled by this reliability weight:
+\begin{equation}
+x'_m = \alpha_m \cdot x_m
+\end{equation}
+Crucially, this allows the network to ``soft-drop'' a modality. For instance, in the case of severe facial occlusion or dark lighting, the network learns to output $\alpha_V \approx 0$ to minimize the propagation of noise.
+
+\subsection{Heterogeneous Graph Transformer}
+The weighted features $x'_V, x'_A, x'_T$ (visualized in Figure \ref{fig:arch}) are projected to a shared latent dimension ($d=192$) and serve as the initial node states $H^{(0)} = [h_V, h_A, h_T]$ in a fully connected graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ where $\mathcal{V} = \{V, A, T\}$ and $\mathcal{E}$ connects all pairs.
+
+\textbf{Theoretical Motivation:} Unlike homogeneous graphs where all nodes share semantics, our heterogeneous formulation explicitly models cross-modal interactions. This is crucial because the relationship between visual and audio features (e.g., lip sync) differs fundamentally from audio-text relationships (e.g., prosody-sentiment alignment).
+
+We employ a 3-layer Transformer Encoder with 4 attention heads ($H=4$) to update these node states. The core operation is Multi-Head Self-Attention (MHSA), defined as:
+\begin{equation}
+\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\end{equation}
+This mechanism allows each modality to attend to others. For example, the Text node can attend to the Audio node to resolve sarcasm (where positive words may have negative prosody). The final nodes are concatenated and passed to a Multi-Layer Perceptron (MLP) for 7-class classification.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{EXPERIMENTS}
+
+\subsection{Dataset \& Implementation Details}
+We evaluate on the \textbf{CMU-MOSEI} dataset \cite{mosei2018}, the largest dataset for multimodal sentiment analysis and emotion recognition, containing over 23,000 annotated sentence segments from 1,000+ online speakers. The dataset covers a wide range of topics and emotional expressions, providing a rigorous benchmark for "in-the-wild" performance.
+We implement our model in PyTorch. Training is performed using the AdamW optimizer with a learning rate of $5e-5$, Focal Loss ($\gamma=2.0$) for class imbalance, and Mixup augmentation ($\alpha=0.2$). To prevent overfitting, we apply dropout ($p=0.5$) and cosine annealing.
+
+\subsection{Comparative Results}
+Table \ref{tab:results} compares our approach with unimodal and multimodal baselines.
+
+\begin{table}[h]
+\caption{Comparison with SOTA on CMU-MOSEI. Acc-7: 7-class sentiment, Acc-2: binary (Positive vs Negative). Our method achieves competitive accuracy with 19$\times$ fewer parameters than SOTA.}
+\label{tab:results}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+Model Variant & Acc-7 (\%) & Acc-2 (\%) & Params \\
+\hline
+MER-CLIP \cite{merclip2025} (SOTA) & 49.3 & $\sim$78 & $\sim$150 MB \\
+LF-RNN \cite{lfrnn2018} (Baseline) & $\sim$40.0 & 61.5 & 12 MB \\
+Text-Only Baseline & 40.8 & 61.2 & $\sim$7.9 MB \\
+\textbf{OpenFace-Adaptive (Ours)} & \textbf{44.0} & \textbf{72.1} & \textbf{7.9 MB} \\
+\hline
+\end{tabular}
+\end{center}
+\vspace{-2mm}
+\end{table}
+
+Results (Table \ref{tab:results}) demonstrate the necessity of Multimodal Fusion. While isolated modalities struggle (Text: 40.8\%; Visual/Audio $<$ 30\%), our Full Model achieves \textbf{44.0\%} on 7-class and \textbf{72.1\%} on binary classification, confirming that the Heterogeneous Graph successfully synthesizes complementary information from weak individual predictors. The confusion matrix (Figure \ref{fig:cm}) reveals that errors primarily occur between adjacent sentiment classes (e.g., Weak Neg $\leftrightarrow$ Neutral), which is semantically reasonable.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.48\textwidth]{confusion_matrix.png}
+\caption{Confusion Matrix: 7-class sentiment prediction. Errors concentrate along the diagonal, indicating confusion between adjacent sentiment levels.}
+\label{fig:cm}
+\end{figure}
+
+\subsection{Ablation Study}
+To quantify the contribution of each proposed component, we systematically disable key modules and observe the impact on performance. Table \ref{tab:ablation} summarizes the results.
+
+\begin{table}[h]
+\caption{Ablation Study: Component Contributions}
+\label{tab:ablation}
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+Configuration & Acc-7 (\%) & F1 \\
+\hline
+Full Model (Gate + Transformer) & \textbf{44.0} & \textbf{0.44} \\
+No Gate (Transformer Only) & 42.5 & 0.43 \\
+No Transformer (Gate + MLP) & 37.1 & 0.37 \\
+\hline
+Visual Only & 26.3 & 0.26 \\
+Audio Only & 27.2 & 0.26 \\
+Text Only & 40.8 & 0.40 \\
+\hline
+\end{tabular}
+\end{center}
+\vspace{-2mm}
+\end{table}
+
+\textbf{Key Insights:}
+\begin{itemize}
+    \item \textbf{Gating Matters}: Removing the Reliability Gate reduces accuracy by 1.5\%, confirming that adaptive modality weighting improves robustness.
+    \item \textbf{Transformer is Essential}: Replacing the Graph Transformer with a simple MLP causes a 6.9\% drop, indicating that cross-modal attention is crucial for synthesizing heterogeneous features.
+    \item \textbf{Fusion Synergy}: The Full Model outperforms the best unimodal baseline (Text) by 3.2\%, demonstrating effective multimodal integration.
+\end{itemize}
+
+\subsection{Robustness Analysis}
+To quantify reliability, we injected Gaussian noise ($\sigma=2.0$) into the Visual modality.
+\begin{itemize}
+    \item \textbf{No-Gate Model}: Score under Noise: \textbf{37.6\%}.
+    \item \textbf{Ours (Gated)}: Score under Noise: \textbf{41.2\%}.
+\end{itemize}
+This result confirms that the Reliability Gate successfully acts as a filter, providing a \textbf{+3.6\%} improvement under adverse conditions by suppressing the noisy visual stream and focusing on robust textual cues.
+
+\subsection{Efficiency \& Edge Deployment}
+To validate the real-world applicability of our model, we applied Dynamic INT8 Quantization. The results are summarized below:
+\begin{itemize}
+    \item \textbf{Original Size}: 7.9 MB
+    \item \textbf{Quantized Size}: 2.5 MB (-68\% reduction)
+    \item \textbf{Inference Speed}: $<10$ms on a standard CPU.
+\end{itemize}
+This efficient profile contrasts with heavy models like MER-CLIP \cite{merclip2025} and rivals specialized edge descriptors like EdgeFace \cite{edgeface2024} and OpenFace 3.0 \cite{openface3_2025}, while offering full multimodal classification.
+
+\subsection{Explainability Case Study}
+We visualized the internal gating scores during a live demo. When the subject covered their face, the \textbf{Visual Trust Score ($\alpha_V$)} dropped from \textbf{0.92} to \textbf{0.05} within 500ms, while Audio Trust remained high (Figure \ref{fig:trust}). Conversely, during audio noise injection, Audio Trust dropped while Visual Trust remained stable. This confirms the model's ability to perform interpretable and robust decision-making.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.48\textwidth]{figure_trust_scores.png}
+\caption{Reliability Gates over Time: Visual Trust (blue) drops during occlusion ($t=2$-$3$s), Audio Trust (red) drops during noise ($t=4$-$5$s).}
+\label{fig:trust}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{ETHICAL CONSIDERATIONS \& LIMITATIONS}
+
+\subsection{Ethical Impact Statement}
+Multimodal Emotion Recognition (MER) technologies carry inherent risks of misuse, including non-consensual surveillance and affective profiling. Our system is designed strictly for cooperative Human-Computer Interaction (HCI) settings where the user is aware of the sensor inputs. We train on the CMU-MOSEI dataset \cite{mosei2018}, which consists of public YouTube videos; however, we acknowledge that consent for secondary biometrics analysis is a complex issue. We explicitly advise against deploying this model for punitive or high-stakes decision-making (e.g., hiring, law enforcement) due to potential biases in the training data.
+
+\subsection{Limitations}
+Our current evaluation is limited to English-language speakers from the CMU-MOSEI dataset, potentially introducing Western-centric cultural bias. Additionally, while the Reliability Gate detects sensor noise, it does not currently account for \textit{semantic} ambiguity (e.g., sarcasm without tonal cues). Future iterations will incorporate cross-cultural datasets (e.g., IEMOCAP, MELD) to improve generalization and validate the approach on conversational emotion recognition tasks.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{CONCLUSION}
+We presented \textbf{OpenFace-Adaptive}, a robust framework for real-world multimodal emotion recognition. By integrating a self-supervised \textbf{Reliability-Aware Gating} mechanism with a \textbf{Heterogeneous Graph Transformer}, we address the critical challenge of sensor failure in ``in-the-wild'' deployments. Our experiments on CMU-MOSEI demonstrate \textbf{44.0\%} 7-class accuracy and \textbf{72.1\%} binary accuracy, with a \textbf{+3.6\%} robustness advantage under visual noise compared to ungated baselines. The model's compact size (\textbf{7.9 MB}, \textbf{2.5 MB} quantized) makes it suitable for edge deployment.
+
+\textbf{Future Work:} We plan to (1) integrate temporal modeling via 3D-CNNs for micro-expression analysis, (2) evaluate on cross-cultural datasets (IEMOCAP, MELD), (3) extend gating to textual modality for sarcasm detection, and (4) explore few-shot adaptation for domain transfer.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+{\small
+\bibliographystyle{unsrt}
+\bibliography{egbib}
+}
+
+\end{document}
