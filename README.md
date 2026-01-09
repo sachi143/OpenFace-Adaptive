@@ -2,7 +2,7 @@
 
 **Robust Multimodal Emotion Recognition via Reliability-Aware Gating and Cross-Modal Attention**
 
-> 📄 *Accepted at FG 2026 (under review)*
+> 📄 *Submitted at FG 2026 (under review)*
 
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-orange.svg)](https://pytorch.org/)
@@ -146,7 +146,7 @@ This is a **private repository** for research purposes. If you are interested in
 - Collaborating on this research
 
 Please contact us via:
-- 📧 Email: [Your Email]
+- 📧 Email: sairam.chennaka@gmail.com
 - 🔗 GitHub: Open an issue on this repository
 
 **For reviewers**: Full code, model weights, and dataset access will be provided upon request.
