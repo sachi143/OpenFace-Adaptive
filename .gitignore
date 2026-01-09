@@ -74,3 +74,4 @@ temp_out/
 demo_log.csv
 *.pth
 OpenFace_2.2.0/
+paper/

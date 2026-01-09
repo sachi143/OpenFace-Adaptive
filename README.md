@@ -127,14 +127,29 @@ OpenFace-Adaptive/
 
 ## 📝 Citation
 
+If you find this work useful, please cite our paper:
+
 ```bibtex
 @inproceedings{openface_adaptive2026,
   title={OpenFace-Adaptive: Robust Multimodal Emotion Recognition via Reliability-Aware Gating and Cross-Modal Attention},
-  author={Anonymous},
+  author={[Authors]},
   booktitle={IEEE International Conference on Automatic Face and Gesture Recognition (FG)},
   year={2026}
 }
 ```
+
+## 🔐 Access & Collaboration
+
+This is a **private repository** for research purposes. If you are interested in:
+- Accessing the full codebase
+- Obtaining pre-trained model weights
+- Collaborating on this research
+
+Please contact us via:
+- 📧 Email: [Your Email]
+- 🔗 GitHub: Open an issue on this repository
+
+**For reviewers**: Full code, model weights, and dataset access will be provided upon request.
 
 ## 📄 License
 
